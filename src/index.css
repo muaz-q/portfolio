@@ -1,3 +1,435 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Layout: an engineer's spec sheet. A narrow mono "margin column" carries the facts
+   (dates, measurements, links); the wide column carries the prose. Stacks on phones. */
+:root {
+  --paper: #eceef1;
+  --sheet: #f6f7f9;
+  --ink: #161a20;
+  --graphite: #59616d;
+  --rule: #c8cdd5;
+  --signal: #2a36c4;
+  --sev-high: #b4232a;
+  --sev-med: #9a6200;
+  --sev-low: #0f6b80;
+
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --serif: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+
+  --step--1: 0.8125rem;
+  --step-0: 1.0625rem;
+  --step-1: 1.3125rem;
+  --step-2: 1.75rem;
+  --step-hero: clamp(3rem, 9vw, 6.25rem);
+  --margin-col: 11.5rem;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #101318;
+    --sheet: #161a21;
+    --ink: #e6e9ee;
+    --graphite: #98a1ae;
+    --rule: #2c323c;
+    --signal: #8c98ff;
+    --sev-high: #ff7b74;
+    --sev-med: #f0b44c;
+    --sev-low: #5cc8de;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #101318;
+  --sheet: #161a21;
+  --ink: #e6e9ee;
+  --graphite: #98a1ae;
+  --rule: #2c323c;
+  --signal: #8c98ff;
+  --sev-high: #ff7b74;
+  --sev-med: #f0b44c;
+  --sev-low: #5cc8de;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: var(--step-0);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration-color: var(--rule);
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
+}
+a:hover {
+  color: var(--signal);
+  text-decoration-color: currentColor;
+}
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.page {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding-inline: clamp(1rem, 4vw, 3rem);
+  padding-block: clamp(2rem, 6vw, 4.5rem) 3rem;
+}
+
+/* ── Masthead ─────────────────────────────────────────── */
+
+.masthead {
+  overflow-x: clip;
+  display: grid;
+  gap: 1.75rem;
+  padding-bottom: clamp(2.5rem, 6vw, 4rem);
+  border-bottom: 1px solid var(--ink);
+}
+.kicker {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--graphite);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+.name {
+  position: relative;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: var(--step-hero);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+  margin: 0;
+  text-wrap: balance;
+}
+.thesis {
+  font-size: var(--step-1);
+  line-height: 1.45;
+  max-width: 34ch;
+  margin: 0;
+  text-wrap: balance;
+}
+.thesis em {
+  font-family: var(--serif);
+  font-style: italic;
+}
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.contact .status {
+  flex-basis: 100%;
+  color: var(--graphite);
+}
+.status::before {
+  content: "";
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-right: 0.55rem;
+  border-radius: 50%;
+  background: var(--signal);
+  vertical-align: 0.08em;
+}
+
+/* mauie: the one playful element. Decorative, hops away from the pointer. */
+.mauie-home {
+  position: relative;
+  display: inline-block;
+  width: 0.2em;
+  height: 0.2em;
+  margin-left: 0.12em;
+  vertical-align: 0.62em;
+}
+.mauie-body {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.45s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+.mauie {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--signal);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.mauie-note {
+  position: absolute;
+  left: 0.5em;
+  top: -0.9em;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--graphite);
+  pointer-events: none;
+}
+
+/* ── Sections: margin column + body column ───────────── */
+
+.section {
+  display: grid;
+  grid-template-columns: var(--margin-col) minmax(0, 1fr);
+  gap: 1rem 2.5rem;
+  padding-block: clamp(2.5rem, 6vw, 4rem);
+  border-bottom: 1px solid var(--rule);
+}
+.section-label {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--graphite);
+  margin: 0.35rem 0 0;
+}
+.section-body {
+  display: grid;
+  gap: clamp(2.5rem, 5vw, 3.5rem);
+  min-width: 0;
+}
+
+/* ── Project entries ─────────────────────────────────── */
+
+.entry {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+.entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+}
+.entry h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: var(--step-2);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.entry .what {
+  color: var(--graphite);
+  margin: 0;
+}
+.entry p {
+  margin: 0;
+  max-width: 64ch;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+}
+
+/* Measurements read like a datasheet: value, then what it measures. */
+.specs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+  gap: 0;
+  margin: 0.25rem 0 0;
+  border-top: 1px solid var(--rule);
+}
+.spec {
+  padding: 0.7rem 1rem 0.75rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.spec dt {
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: var(--step-1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.spec dd {
+  margin: 0.15rem 0 0;
+  font-size: var(--step--1);
+  line-height: 1.4;
+  color: var(--graphite);
+}
+
+/* Real AgentGuard output. */
+.terminal {
+  margin: 0;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  overflow-x: auto;
+}
+.terminal-bar {
+  display: block;
+  padding: 0.5rem 0.9rem;
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+}
+.terminal pre {
+  margin: 0;
+  padding: 0.8rem 0.9rem 0.9rem;
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  white-space: pre;
+}
+.loc {
+  color: var(--graphite);
+}
+.sev-high {
+  color: var(--sev-high);
+  font-weight: 500;
+}
+.sev-medium {
+  color: var(--sev-med);
+  font-weight: 500;
+}
+
+/* ── Writing ─────────────────────────────────────────── */
+
+.book {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 15rem);
+  gap: 1.5rem 3rem;
+  align-items: start;
+}
+.book h3 {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  line-height: 1.05;
+  margin: 0;
+}
+.book .sub {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--graphite);
+  margin: 0.6rem 0 1.1rem;
+}
+.book p {
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  line-height: 1.65;
+  max-width: 58ch;
+  margin: 0 0 1.25rem;
+}
+.rooms {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  border-top: 1px solid var(--rule);
+}
+.rooms li {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--rule);
+}
+.rooms span {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+  padding-top: 0.15rem;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--ink);
+  border-radius: 3px;
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  text-decoration: none;
+}
+.button:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ── Experience & footer ─────────────────────────────── */
+
+.role {
+  display: grid;
+  gap: 0.35rem;
+}
+.role h3 {
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: var(--step-1);
+  margin: 0;
+}
+.role p {
+  margin: 0;
+  max-width: 64ch;
+}
+.role .when {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--graphite);
+}
+
+.colophon {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 2rem;
+  padding-top: 1.5rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--graphite);
+}
+.colophon p {
+  margin: 0;
+}
+
+/* ── Small screens ───────────────────────────────────── */
+
+@media (max-width: 760px) {
+  .section {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .book {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mauie-body {
+    transition: none;
+  }
+}
