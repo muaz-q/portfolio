@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 
 const ROOMS = [
+  "Bound by the Curse to Constantly Change",
+  "Life’s Cruelest Joke and the Illusion of Free Will",
   "All While I Was Burning Myself Away",
-  "The Loneliest Crowd",
-  "The Collector of Failures",
-  "The Flower That Forgot",
+  "I’ve Collected Failures Like a Collector Collects His Debts",
   "The Mirror That Knows Me",
-  "Agony With No Address",
-  "The Behavioral Sink",
-  "My Beloved Four Legs",
+  "My Beloved 4 Legs",
   "Reflection",
   "A Closing Window",
+  "Human Behaviour Is Fleeting",
 ];
 const NUMERALS = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X"];
 
@@ -351,10 +350,9 @@ export default function App() {
           <article className="book">
             <div>
               <h3>Living or Existing?</h3>
-              <p className="sub">Ten essays · 30 pages · 2026</p>
+              <p className="sub">Nine pieces · 25 pages · 2025–2026</p>
               <blockquote>
-                “This book is not an answer. It is a collection of rooms I have stood inside while trying to
-                understand the difference.”
+                “Life is not a possession. It is a timestamp.”
               </blockquote>
               <p>
                 Personal essays on purpose, loneliness, failure, memory and loss, written at different times and, as
