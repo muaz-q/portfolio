@@ -73,25 +73,160 @@ const PROJECTS = [
   },
 ];
 
-// Real output of `agentguard examples/research_agent.py --plain` (fix lines trimmed).
-const FINDINGS = [
-  ["31:17", "AG001", "high", "LLM call (anthropic.messages) inside `while` loop (line 28) with no iteration cap"],
-  ["31:17", "AG002", "high", "LLM call (anthropic.messages) re-sends a history that grows every iteration; input tokens grow quadratically"],
-  ["47:13", "AG003", "medium", "call to `summarise` inside 2 nested loops (lines 45, 46); calls multiply"],
+const COMMAND = "agentguard examples/research_agent.py";
+
+// The real report AgentGuard 0.3.1 prints for its demo agent (examples/research_agent.py),
+// condensed to the lines that matter. Each finding's fix is the tool's own text.
+const OUTPUT = [
+  { kind: "out", cls: "dim", text: "examples/research_agent.py" },
+  { kind: "out", text: "Call sites: 3  ·  Loops: 3  ·  Risk: ", warn: "⚠ CRITICAL" },
+  {
+    kind: "finding", sev: "high", rule: "AG001", line: 31,
+    msg: "LLM call (anthropic.messages) inside `while` loop (line 28) with no iteration cap",
+    fix: "Bound the loop with a step counter (e.g. `for step in range(MAX_STEPS)`) or an explicit `if step >= MAX_STEPS: break`.",
+  },
+  {
+    kind: "finding", sev: "high", rule: "AG002", line: 31,
+    msg: "LLM call (anthropic.messages) re-sends a history that grows every iteration; input tokens grow quadratically",
+    fix: "Keep a sliding window (`messages[-k:]`), summarise old turns, or use server-side compaction/context editing where the provider offers it.",
+  },
+  {
+    kind: "finding", sev: "medium", rule: "AG007", line: 31,
+    msg: "~2,260-token static prompt re-sent each iteration with no `cache_control`",
+    fix: "Mark the static prefix with `cache_control` - cached reads bill at about 10% of the input price.",
+  },
+  {
+    kind: "finding", sev: "medium", rule: "AG003", line: 47,
+    msg: "call to `summarise` inside 2 nested loops (lines 45, 46); calls multiply",
+    fix: "Flatten the work into one batch, or cap the inner loop.",
+  },
+  {
+    kind: "finding", sev: "low", rule: "AG006", line: 21,
+    msg: "LLM call (openai.chat) sets no output-token cap",
+    fix: "Pass `max_tokens` / `max_completion_tokens` / `max_output_tokens`.",
+  },
+  { kind: "out", cls: "dim gap", text: "Cost per run, by loop depth N:" },
+  { kind: "out", text: "  N=1     $0.0082 → $0.02" },
+  { kind: "out", text: "  N=10    $0.21 → $0.49" },
+  { kind: "out", text: "  N=100   $14.88 → $36.40  ", warn: "⚠ over $10 per run" },
+  { kind: "out", cls: "gap", text: "5 finding(s), 2 high, in 1 file(s)" },
 ];
 
+const SEV_ICON = { high: "⚠", medium: "⚡", low: "•" };
+const TYPE_MS = 38;
+const LINE_MS = 170;
+
+const TYPE_START = 350;
+const OUTPUT_START = TYPE_START + COMMAND.length * TYPE_MS + 450;
+const RUN_MS = OUTPUT_START + (OUTPUT.length + 1) * LINE_MS;
+
+const clamp = (v, max) => Math.max(0, Math.min(max, Math.floor(v)));
+
 function Terminal() {
+  const ref = useRef(null);
+  // Everything shown is derived from one clock: how long ago this run started.
+  const [startedAt, setStartedAt] = useState(null);
+  const [now, setNow] = useState(0);
+  const [open, setOpen] = useState({});
+  const [still] = useState(
+    () =>
+      typeof window === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !("IntersectionObserver" in window)
+  );
+
+  // Start the first run when the terminal scrolls into view.
+  useEffect(() => {
+    if (still || !ref.current) return undefined;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          const t = performance.now();
+          setNow(t);
+          setStartedAt(t);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [still]);
+
+  // Advance the clock until the run has finished.
+  useEffect(() => {
+    if (startedAt === null) return undefined;
+    const id = setInterval(() => {
+      const t = performance.now();
+      setNow(t);
+      if (t - startedAt >= RUN_MS) clearInterval(id);
+    }, 30);
+    return () => clearInterval(id);
+  }, [startedAt]);
+
+  const replay = () => {
+    const t = performance.now();
+    setOpen({});
+    setNow(t);
+    setStartedAt(t);
+  };
+
+  const elapsed = still ? Infinity : startedAt === null ? 0 : now - startedAt;
+  const typed = clamp((elapsed - TYPE_START) / TYPE_MS, COMMAND.length);
+  const shown = clamp((elapsed - OUTPUT_START) / LINE_MS, OUTPUT.length);
+  const done = shown === OUTPUT.length;
+
   return (
-    <figure className="terminal">
-      <figcaption className="terminal-bar">$ agentguard examples/research_agent.py --plain</figcaption>
-      <pre>
-        {FINDINGS.map(([loc, rule, sev, msg]) => (
-          <span key={rule}>
-            <span className="loc">research_agent.py:{loc}:</span> <span className={`sev-${sev}`}>{rule} [{sev}]</span> {msg}
-            {"\n"}
-          </span>
-        ))}
-      </pre>
+    <figure className="terminal" ref={ref} aria-label="AgentGuard scanning a demo agent">
+      <figcaption className="terminal-bar">
+        <span className="dots" aria-hidden="true"><i /><i /><i /></span>
+        <span>agentguard 0.3.1</span>
+        <button type="button" className="replay" onClick={replay}>
+          ↻ Replay
+        </button>
+      </figcaption>
+      <div className="terminal-body">
+        <p className="out">
+          <span className="prompt">$ </span>
+          <span className="cmd">{COMMAND.slice(0, typed)}</span>
+          {typed < COMMAND.length && <span className="caret" aria-hidden="true" />}
+        </p>
+        {OUTPUT.slice(0, shown).map((row, i) => {
+          if (row.kind === "out") {
+            return (
+              <p key={i} className={`out ${row.cls || ""}`}>
+                {row.text}
+                {row.warn && <span className="warn">{row.warn}</span>}
+              </p>
+            );
+          }
+          const isOpen = Boolean(open[i]);
+          return (
+            <div key={i}>
+              <button
+                type="button"
+                className="finding"
+                aria-expanded={isOpen}
+                onClick={() => setOpen((o) => ({ ...o, [i]: !o[i] }))}
+              >
+                <span className="chev" aria-hidden="true">›</span>
+                <span className={`sev-${row.sev}`}>
+                  {SEV_ICON[row.sev]} line {row.line} {row.rule}
+                </span>{" "}
+                {row.msg}
+              </button>
+              {isOpen && <p className="fix">→ {row.fix}</p>}
+            </div>
+          );
+        })}
+        {done && (
+          <p className="out">
+            <span className="prompt">$ </span>
+            <span className="caret" aria-hidden="true" />
+            <span className="hint"> &nbsp;click a finding to see its fix</span>
+          </p>
+        )}
+      </div>
     </figure>
   );
 }
@@ -217,10 +352,10 @@ export default function App() {
             <div>
               <h3>Living or Existing?</h3>
               <p className="sub">Ten essays · 30 pages · 2026</p>
-              <p>
+              <blockquote>
                 “This book is not an answer. It is a collection of rooms I have stood inside while trying to
                 understand the difference.”
-              </p>
+              </blockquote>
               <p>
                 Personal essays on purpose, loneliness, failure, memory and loss, written at different times and, as
                 it turned out, in conversation with one another.
@@ -262,7 +397,7 @@ export default function App() {
 
       <footer className="colophon">
         <p>© 2026 Muaz Iqubal</p>
-        <p>Set in IBM Plex. The blue dot is mauie.</p>
+        <p>Typed in Special Elite and Courier Prime. The dot is mauie.</p>
       </footer>
     </main>
   );
