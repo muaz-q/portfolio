@@ -350,7 +350,7 @@ export default function App() {
           <article className="book">
             <div>
               <h3>Living or Existing?</h3>
-              <p className="sub">Nine pieces · 25 pages · 2025–2026</p>
+              <p className="sub">Nine pieces · 30 pages · 2025–2026</p>
               <blockquote>
                 “Life is not a possession. It is a timestamp.”
               </blockquote>
