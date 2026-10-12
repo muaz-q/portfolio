@@ -319,7 +319,6 @@ export default function App() {
           purpose, failure and loss.
         </p>
         <ul className="contact">
-          <li className="status">Looking for a Summer 2027 software engineering internship</li>
           <li>
             <a href="mailto:muaz51ip@gmail.com">muaz51ip@gmail.com</a>
           </li>
