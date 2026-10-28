@@ -50,6 +50,26 @@ const PROJECTS = [
     links: [["GitHub", "https://github.com/muaz-q/job-radar"]],
   },
   {
+    name: "CS Geek",
+    what: "A daily trivia game where the rarer your correct answer, the more it scores. Inspired by Krillion.",
+    body:
+      "Each day brings seven \"Name a…\" prompts on operating systems, networks, databases and more, with a general " +
+      "knowledge edition called Freeloader. How rare an answer is comes from real players: every answer is " +
+      "recorded in Postgres, once per player per question. Until enough people have played, shares start from " +
+      "published data such as the Stack Overflow Developer Survey, and fade out as player counts grow. " +
+      "Questions with no published data are labelled as estimates in the game.",
+    specs: [
+      ["526", "questions across 36 subjects, two editions on one engine"],
+      ["~23,000", "accepted answers, with typo-tolerant matching"],
+      ["29", "questions seeded from published survey data"],
+    ],
+    links: [
+      ["Play CS Geek", "https://stack-rank-one.vercel.app"],
+      ["Play Freeloader", "https://stack-rank-one.vercel.app/freeloader/"],
+      ["GitHub", "https://github.com/muaz-q/stack-rank"],
+    ],
+  },
+  {
     name: "Sally",
     what: "A Spotify wallpaper engine that lives in the Windows system tray.",
     body:
