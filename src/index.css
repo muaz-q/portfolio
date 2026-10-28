@@ -511,3 +511,14 @@ a:hover {
     animation: none;
   }
 }
+
+/* ── CS Geek: the title screen types itself in behind a cursor ── */
+.shot { overflow: hidden; }
+.shot-canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1280 / 800;
+  image-rendering: pixelated;
+  border-radius: 0 0 6px 6px;
+}

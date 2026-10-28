@@ -51,6 +51,7 @@ const PROJECTS = [
   },
   {
     name: "CS Geek",
+    shot: true,
     what: "A daily trivia game where the rarer your correct answer, the more it scores. Inspired by Krillion.",
     body:
       "Each day brings seven \"Name a…\" prompts on operating systems, networks, databases and more, with a general " +
@@ -295,6 +296,104 @@ function Mauie() {
   );
 }
 
+// CS Geek's title screen, printed block by block behind a cursor, like the screen typing itself out.
+const SHOT = { src: "/cs-geek.webp", w: 1280, h: 800, cell: 20, ms: 2600 };
+
+function TypedShot() {
+  const ref = useRef(null);
+  const canvasRef = useRef(null);
+  const [img, setImg] = useState(null);
+  const [run, setRun] = useState(0);
+  const [still] = useState(
+    () =>
+      typeof window === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      !("IntersectionObserver" in window)
+  );
+
+  useEffect(() => {
+    const im = new Image();
+    im.onload = () => setImg(im);
+    im.src = SHOT.src;
+  }, []);
+
+  // Start the first run when the picture scrolls into view.
+  useEffect(() => {
+    if (still || !ref.current) return undefined;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setRun(1);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.35 }
+    );
+    obs.observe(ref.current);
+    return () => obs.disconnect();
+  }, [still]);
+
+  useEffect(() => {
+    const ctx = canvasRef.current?.getContext("2d");
+    if (!ctx || !img) return undefined;
+    if (still) {
+      ctx.drawImage(img, 0, 0);
+      return undefined;
+    }
+    ctx.fillStyle = "#0b1428";
+    ctx.fillRect(0, 0, SHOT.w, SHOT.h);
+    if (!run) return undefined;
+    const { cell } = SHOT;
+    const cols = SHOT.w / cell;
+    const total = cols * (SHOT.h / cell);
+    const paint = (i) => {
+      const x = (i % cols) * cell;
+      const y = Math.floor(i / cols) * cell;
+      ctx.drawImage(img, x, y, cell, cell, x, y, cell, cell);
+      return [x, y];
+    };
+    let drawn = 0;
+    let frame;
+    const t0 = performance.now();
+    const step = (t) => {
+      const n = Math.min(total, Math.floor((total * Math.max(0, t - t0)) / SHOT.ms));
+      // cells up to n become picture (this also paints over the old cursor), then the cursor moves to n
+      for (; drawn < n; drawn++) paint(drawn);
+      if (n < total) {
+        const x = (n % cols) * cell;
+        const y = Math.floor(n / cols) * cell;
+        ctx.fillStyle = "#4fd6ec";
+        ctx.fillRect(x + 3, y + 2, cell - 6, cell - 4);
+        frame = requestAnimationFrame(step);
+      }
+    };
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
+  }, [img, run, still]);
+
+  return (
+    <figure className="terminal shot" ref={ref}>
+      <figcaption className="terminal-bar">
+        <span className="dots" aria-hidden="true"><i /><i /><i /></span>
+        <span>stack-rank-one.vercel.app</span>
+        {!still && (
+          <button type="button" className="replay" onClick={() => setRun((r) => r + 1)}>
+            ↻ Replay
+          </button>
+        )}
+      </figcaption>
+      <canvas
+        ref={canvasRef}
+        width={SHOT.w}
+        height={SHOT.h}
+        className="shot-canvas"
+        role="img"
+        aria-label="CS Geek's title screen: the pixel-art logo over a sunset sea, with the Freeloader / CS Geek switch and a Begin Trace button"
+      />
+    </figure>
+  );
+}
+
 function Project({ p }) {
   return (
     <article className="entry">
@@ -303,6 +402,7 @@ function Project({ p }) {
       </div>
       <p className="what">{p.what}</p>
       {p.terminal && <Terminal />}
+      {p.shot && <TypedShot />}
       <p>{p.body}</p>
       {p.specs && (
         <dl className="specs">
